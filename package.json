@@ -1,0 +1,30 @@
+{
+  "name": "crud-playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "mocha",
+    "start": "node src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robindanzinger/crud-playground.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/robindanzinger/crud-playground/issues"
+  },
+  "homepage": "https://github.com/robindanzinger/crud-playground#readme",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "mocha": "^7.0.0"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-graphql": "^0.9.0",
+    "graphql": "^14.6.0",
+    "mongodb": "^3.5.2"
+  }
+}
