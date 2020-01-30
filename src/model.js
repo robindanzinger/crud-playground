@@ -12,17 +12,20 @@ function connect() {
       resolve({collection, client})
     })
   })
+
 }
 
+let id = 1000
+
 function insert(movie) {
-  movie.id = Date.now()
+  movie.id = id++
   return connect().then(({collection, client}) => {
     return new Promise((resolve, reject) => {
       collection.insertOne(movie, {safe: true}, (error, result) => {
         if (error) {
           reject(error)
         } else {
-          resolve(result)
+          resolve(result.ops[0])
         }
         client.close()
       })
@@ -105,10 +108,9 @@ module.exports = {
     return remove(id)
   },
   save(movie) {
+    console.log('save')
     if (!movie.id) {
-      const nm = insert(movie)
-      console.log(nm)
-      return nm
+      return insert(movie)
     }
     return update(movie)
   }

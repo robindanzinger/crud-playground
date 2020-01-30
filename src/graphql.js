@@ -4,7 +4,7 @@ const graphqlHTTP = require('express-graphql')
 
 const schema = buildSchema(`
   type Movie {
-    id: Int!
+    id: String!
     title: String!
     year: Int
     public: Int
