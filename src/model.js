@@ -1,119 +1,111 @@
 const MongoClient = require('mongodb').MongoClient
+const dbname = 'testdb'
+const url = 'mongodb://localhost:27017/testdb'
 
 function connect() {
   return new Promise((resolve, reject) => {
-    const url = 'mongodb://localhost:27017'
     MongoClient.connect(url, (err, client) => {
       if (err) {
+        console.log('Error on connecting with db server')
         reject(err)
       }
-      const db = client.db('moviedb')
-      const collection = db.collection('Movie')
-      resolve({collection, client})
-    })
-  })
-
-}
-
-let id = 1000
-
-function insert(movie) {
-  movie.id = id++
-  return connect().then(({collection, client}) => {
-    return new Promise((resolve, reject) => {
-      collection.insertOne(movie, {safe: true}, (error, result) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(result.ops[0])
-        }
-        client.close()
-      })
+      resolve(client)
     })
   })
 }
 
-function get(query = {}) {
-  return connect().then(({ collection, client }) => {
-    return new Promise((resolve, reject) => {
-      collection.find(query).toArray((error, docs) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(docs)
-        }
-        client.close()
-      })
-    })
-  })
-}
-
-function getAll()  {
-  return connect().then(({ collection, client }) => {
-    return new Promise((resolve, reject) => {
-      collection.find({}).toArray((error, docs) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(docs)
-        }
-        client.close()
-      })
-    })
-  })
-}
-
-function update(movie) {
-  movie.id = parseInt(movie.id, 10)
-  return connect().then(({ collection, client }) => {
-    return new Promise((resolve, reject) => {
-      collection.update(
-        { id: movie.id },
-        { $set: movie },
-        { safe: true},
-        function(error) {
-          if (error) {
-            reject(error)
-          } else {
-            resolve()
-          }
-          client.close()
-        })
-    })
-  })
-}
-
-function remove(id) {
-  return connect().then(({collection, client}) => {
-    return new Promise((resolve, reject) => {
-      collection.remove({id}, {safe: true}, error => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve()
-        }
-        client.close()
-      })
-    })
-  })
-}
-
-
-module.exports = {
-  getAll,
-  get(id) {
-    return get({ id }).then(movie => movie[0])
-  },
-  delete(id) {
-    return remove(id)
-  },
-  save(movie) {
-    console.log('save')
-    if (!movie.id) {
-      return insert(movie)
-    }
-    return update(movie)
+async function onCollection(name, collectionName, opFunc, resolveFunc = (r) => r) {
+  try {
+    console.log('call opfunc', collectionName, name)
+    const client = await connect()
+    const db = client.db(dbname)
+    const collection = db.collection(collectionName)
+    const result = await opFunc(collection)
+    return resolveFunc(result)
+  } catch (e) {
+    console.log(e)
   }
 }
 
+function create(collection, item) {
+  return onCollection('create', collection, (col) => {
+    return col.insertOne(item, {safe: true})
+  }, (result) => {return result.ops[0]})
+}
 
+async function get(collection, query) {
+  return onCollection('get', collection, (col) => {
+    return col.find(query).toArray()
+  })
+}
+
+async function getResolveEmbedded(collection, aggregate, query) {
+  const result = await onCollection('get', collection, (col) => {
+    return col.find(query).toArray()
+  })
+  return resolveAggregates(result, aggregate)
+}
+
+async function resolveAggregates(items, aggregate) {
+  console.log('items', items)
+  for (item of items) {
+    const key = Object.keys(aggregate)[0]
+    const sourcePath = key.split('.')
+    const targetPath = aggregate[key].split('.')
+    const prop = sourcePath.pop()
+
+    const objects = sourcePath.reduce((acc,cur) => {
+      return [].concat.apply([], acc.map(e => {
+        if (e[cur] instanceof Array) {
+          return e[cur].reduce((acc, val) => acc.concat(val), [])
+        }
+        return e[cur]
+      }))
+    }, [item])
+
+    for (const obj of objects) {
+      const realob = await get(targetPath[0], {_id: obj[prop]})
+      obj[prop] = realob[0]    
+    }
+  }
+  return items
+}
+
+function getAll(collection) {
+  return onCollection('getAll', collection, (col) => {
+    return col.find({}).toArray()})
+}
+
+function update(collection, item) {
+  console.log(item._id)
+  return onCollection('update', collection, (col) => {
+    return col.updateOne(
+      {_id: item['_id']},
+      {$set: item },
+      {safe: true}
+    )
+  }, (result) => {return result})
+}
+
+function remove(collection, item) {
+  return onCollection('remove', collection, (col) => {
+    return col.remove({_id: item['_id']}, {safe: true})
+  })
+}
+
+function insertUser(user) {
+  return create('user', user)
+}
+
+module.exports = {
+  createMovie: create.bind(null, 'movie'),
+  getMovie: get.bind(null, 'movie'),
+  getMovieDeep: getResolveEmbedded.bind(null, 'movie', {'rating.user': 'user._id'}),
+  removeMovie: remove.bind(null, 'movie'),
+  updateMovie: update.bind(null, 'movie'),
+
+  createUser: create.bind(null, 'user'),
+  getUser: get.bind(null, 'user'),
+  removeUser: remove.bind(null, 'user'),
+  updateUser: update.bind(null, 'user')
+}
