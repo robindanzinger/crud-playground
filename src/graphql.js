@@ -1,5 +1,4 @@
 const buildSchema = require('graphql').buildSchema
-const movieModel = require('./model')
 const graphqlHTTP = require('express-graphql')
 
 const schema = buildSchema(`
@@ -34,13 +33,10 @@ const schema = buildSchema(`
 
 const rootValue = {
   movie() {
-    return movieModel.getAll({ userId: 1})
   },
   director() {
-    return movieModel.getDirectors({})
   },
   createMovie ({movie}) {
-    return movieModel.save(movie, 1)
   }
 }
 

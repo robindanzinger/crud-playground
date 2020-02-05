@@ -15,15 +15,20 @@ function connect() {
 }
 
 async function onCollection(name, collectionName, opFunc, resolveFunc = (r) => r) {
+  let client
   try {
-    console.log('call opfunc', collectionName, name)
-    const client = await connect()
+    client = await connect()
     const db = client.db(dbname)
     const collection = db.collection(collectionName)
     const result = await opFunc(collection)
-    return resolveFunc(result)
+    const resolved = resolveFunc(result)
+    return resolved
   } catch (e) {
     console.log(e)
+  } finally {
+    if (client) {
+      client.close()
+    }
   }
 }
 
@@ -47,7 +52,6 @@ async function getResolveEmbedded(collection, aggregate, query) {
 }
 
 async function resolveAggregates(items, aggregate) {
-  console.log('items', items)
   for (item of items) {
     const key = Object.keys(aggregate)[0]
     const sourcePath = key.split('.')
@@ -77,7 +81,6 @@ function getAll(collection) {
 }
 
 function update(collection, item) {
-  console.log(item._id)
   return onCollection('update', collection, (col) => {
     return col.updateOne(
       {_id: item['_id']},
@@ -89,7 +92,7 @@ function update(collection, item) {
 
 function remove(collection, item) {
   return onCollection('remove', collection, (col) => {
-    return col.remove({_id: item['_id']}, {safe: true})
+    return col.remove({'_id': item['_id']}, {safe: true})
   })
 }
 

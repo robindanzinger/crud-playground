@@ -1,47 +1,54 @@
 const {assert} = require('chai')
-const model = require('../src/model')
+const model = require('../src/mongomodelmanual')
 
-const {MongoClient} = require('mongodb')
-const url = 'mongodb://localhost:27017'
-const client = new MongoClient(url, {useNewUrlParser: true})
+describe('simple crud operations', function () {
 
-function connect() {
-  return new Promise((resolve, reject) => {
-    client.connect((err) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve({cl:client})
-      }
-    })
+  beforeEach(async () => {
+    const usersbeforedelete = await model.getUser({})
+    await deleteAll()
+    const users = await model.getUser({})
+    assert.lengthOf(users, 0)
   })
-}
 
-describe('write and read', function () {
+  it('can read a resource', async function () {
+    await deleteAll()
+    await createUser('Imogen Spurnrose', 'Banker Street', 'The Burgue')
+    await createUser('Rycroft Philostrate', 'Carnival Row', 'The Burgue')
 
-  it('foo', function () {
+    const read = await model.getUser({})
 
-var arrays = [
-  ["$6"],
-  ["$12"],
-  ["$25"],
-  ["$25"],
-  ["$18"],
-  ["$22"],
-  ["$10"]
-];
-var merged = [].concat.apply([], arrays)
-console.log([].concat.apply([], [[1,2],3]))
- console.log([1].concat([2,3],[4],5))
-console.log(merged)
-  }),
-  it('will always pass', async function () {
-    
+    assert.lengthOf(read, 2)
+  })
+  it('can create a resource', async function () {
+    const stored = await createUser('Rycroft Philostrate', 'Carnival Row', 'The Burgue')
+    const read = await model.getUser({_id: stored._id})
+
+    assert.lengthOf(read, 1)
+    assert.deepEqual(stored, read[0])
+  })
+  it('can update a resource', async function () {
+    const stored = await createUser('Rycroft Philostrate', 'Carnival Row', 'The Burgue')
+    stored.name = 'Imogen Spurnrose'
+    await model.updateUser(stored)
+
+    const read = await model.getUser({_id: stored._id})
+
+    assert.deepEqual(stored, read[0])
+  })
+  it('can remove a resource', async function () {
+    const stored = await createUser('Rycroft Philostrate', 'Carnival Row', 'The Burgue')
+
+    await model.removeUser(stored)
+
+    const read = await model.getUser({_id: stored._id})
+    assert.lengthOf(read, 0)
+  })
+
+
+  it('can read deep models', async function () {
     const us = await model.getUser({})
-    console.log('START TEST: all users in db', us)
-
-    const philo = await createUser('Rycroft Philostrate', 'Carnival Row', 'The Burgue')
     const imogen = await createUser('Imogen Spurnrose', 'Banker Street', 'The Burgue')
+    const philo = await createUser('Rycroft Philostrate', 'Carnival Row', 'The Burgue')
 
     const carnivalRow = await createMovie('Carnival Row')
     const starWars = await createMovie('Star Wars')
@@ -61,37 +68,34 @@ console.log(merged)
     for (const mv of mvs) {
       console.dir(mv, {depth: null})
     }
-
-    // await deleteAll();
   })
 })
 
 async function deleteAll() {
   try {
     const users = await model.getUser({})
-    if (users)
-      users.forEach(async u => {
-        await model.removeUser(u)
-        console.log("deleted user", u)
-      })
+    if (users) {
+      for (user of users) {
+        await model.removeUser(user)
+      }
+    }
     const movies = await model.getMovie({})
-    if (movies)
-      movies.forEach(m => {
-        model.removeMovie(m)
-      })
+    if (movies) {
+      for (movie of movies) {
+        await model.removeMovie(movie)
+      }
+    }
   } catch (e) {
-    console.log('SOMETHING WENT WRONG')
-    console.err(e)
+    console.log(e)
   }
 }
 
 
 async function createUser(name, street, city) {
   const user = await model.getUser({name})
-  console.log('found user with name', name, user !== null)
   if (!user || user.length < 1) {
-    console.log('create new user')
-    return await model.createUser({name, address: {street, city}})
+    const result = await model.createUser({name, address: {street, city}})
+    return result
   } else {
     return user[0]
   }
@@ -99,7 +103,6 @@ async function createUser(name, street, city) {
 
 async function createMovie(title) {
   const movie = await model.getMovie({title})
-  console.log('found movie with title', title, movie !== null)
   if (!movie || movie.length < 1) {
     return await model.createMovie({title})
   }
