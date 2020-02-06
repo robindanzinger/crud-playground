@@ -1,6 +1,6 @@
 const MongoClient = require('mongodb').MongoClient
 const dbname = 'testdb'
-const url = 'mongodb://localhost:27017/testdb'
+const url = 'mongodb://localhost:27017/'
 
 function connect() {
   return new Promise((resolve, reject) => {
@@ -44,14 +44,21 @@ async function get(collection, query) {
   })
 }
 
-async function getResolveEmbedded(collection, aggregate, query) {
+async function getResolveEmbedded(collection, aggregates, query) {
   const result = await onCollection('get', collection, (col) => {
     return col.find(query).toArray()
   })
-  return resolveAggregates(result, aggregate)
+  return resolveAggregates(result, aggregates)
 }
 
-async function resolveAggregates(items, aggregate) {
+async function resolveAggregates(items, aggregates) {
+  for (aggregate of aggregates) {
+    await resolveAggregate(items, aggregate)
+  }
+  return items
+}
+
+async function resolveAggregate(items, aggregate) {
   for (item of items) {
     const key = Object.keys(aggregate)[0]
     const sourcePath = key.split('.')
@@ -103,7 +110,7 @@ function insertUser(user) {
 module.exports = {
   createMovie: create.bind(null, 'movie'),
   getMovie: get.bind(null, 'movie'),
-  getMovieDeep: getResolveEmbedded.bind(null, 'movie', {'rating.user': 'user._id'}),
+  getMovieDeep: getResolveEmbedded.bind(null, 'movie', [{'rating.user': 'user._id'}]),
   removeMovie: remove.bind(null, 'movie'),
   updateMovie: update.bind(null, 'movie'),
 
