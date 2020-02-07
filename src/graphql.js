@@ -1,42 +1,57 @@
 const buildSchema = require('graphql').buildSchema
 const graphqlHTTP = require('express-graphql')
+const model = require('./mongomodelmanual')
 
 const schema = buildSchema(`
   type Movie {
-    id: String!
+    _id: ID!
     title: String!
-    year: Int
-    public: Int
-    user: Int
-    director: Director
+    rating: [Rating]
   }
-  type Director {
-    id: String
+  type Rating {
+    user: User
+    rate: Int
+  }
+  type Address {
+    street: String
+    city: String
+  }
+  type User {
+    _id: String
     name: String
-  }
-  input MovieInput {
-    title: String!
-    year: Int
-    public: Int
-    user: Int
-    director: String 
+    address: Address
   }
   type Query {
-    movie: [Movie]
-    director: [Director]
-  }
-  type Mutation {
-    createMovie(movie: MovieInput): Movie
+    movies: [Movie]
+    users: [User]
+    user(id: String): User
+    movie(id: String): Movie
   }
 `)
 
 
 const rootValue = {
-  movie() {
+  movies(obj, args, context, info) {
+    return model.getMovie({})
   },
-  director() {
+  users() {
+    return model.getUser({})
   },
-  createMovie ({movie}) {
+  async User({_id}) {
+    console.log('ask for USER')
+    return (await model.getUser({_id}))[0]
+  },
+  async user({id}, args, context, info) {
+    console.log("ask for user")
+    return (await model.getUser())[0]
+  },
+  async changeMovie({movie}) {
+    const res = await model.updateMovie(movie)
+    return `changed ${movie._id} and result is ${res}`
+  },
+  async removeMovie({movie}) {
+    await model.removeMovie(movie)
+    return "should be removed"
   }
 }
 
