@@ -1,11 +1,11 @@
 const { ApolloServer, gql } = require('apollo-server-express')
-// const { typeDefs, resolvers } = require('./schema')
 const typeDefs = require('./types.gql')
 const mongoose = require('mongoose')
 
 const Schema = mongoose.Schema
 const authorMschema = new mongoose.Schema({
-  name: String
+  name: String,
+  books: [{ type: Schema.Types.ObjectId, ref: 'book' }]
 })
 const bookMschema = new mongoose.Schema({
   title: String,
@@ -38,7 +38,13 @@ const server = new ApolloServer({
   playground: true,
 })
 
+// Testdata
 async function initDb() {
+
+  await authorM.deleteMany()
+  await bookM.deleteMany()
+
+  // authors
   const rowling = new authorM({
     name: 'J.K. Rowling'
   })
@@ -48,24 +54,30 @@ async function initDb() {
   })
   const cid = await crichton.save()
 
-  // Testdata
-  const hp = new bookM({
+  // books
+  const hp1 = new bookM( {
+    title: 'The Philosopher\'s Stone',
+    author: rid._id,
+  })
+
+  const hp2 = new bookM({
     title: 'Harry Potter and the Chamber of Secrets',
-    author: rid['_id'],
+    author: rid._id,
   })
 
   const jp = new bookM({
     title: 'Jurassic Park',
-    author: cid['_id'],
+    author: cid._id,
   })
-  hp.save()
+
+  hp1.save()
+  hp2.save()
   jp.save()
 }
 
 initDb()
 
 module.exports = function(app) {
-  console.log('apply middleware')
-  server.applyMiddleware({ app, path: '/graphql2' })
+  server.applyMiddleware({ app, path: '/graphql' })
 }
 

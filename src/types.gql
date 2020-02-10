@@ -7,6 +7,7 @@ module.exports = {
 
   type Author {
     name: String
+    books: [Book]
   }
 
   type Query {
@@ -18,8 +19,12 @@ module.exports = {
     return {
        Book: {
           author(book) {
-            console.log('foobar', book.author['_id'], book.author) 
-            return model.authors.findOne({'_id': book.author['_id']})
+            return model.authors.findById(book.author._id)
+          }
+        },
+        Author: {
+          books(author) {
+            return model.books.find({author: author._id})
           }
         },
         Query: {
