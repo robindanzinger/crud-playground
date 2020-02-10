@@ -1,0 +1,23 @@
+  module.exports = {
+  schema:  `
+  type Book {
+    title: String
+    author: Author
+  }
+
+  type Author {
+    name: String
+  }
+
+  type Query {
+    books: [Book]
+  }
+  `,
+ resolver: {
+   Book: {
+     author(book) {
+       return authors[book.authour]
+     }
+   }
+ }
+} 
