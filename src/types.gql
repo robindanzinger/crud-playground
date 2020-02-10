@@ -1,4 +1,4 @@
-  module.exports = {
+module.exports = {
   schema:  `
   type Book {
     title: String
@@ -11,13 +11,21 @@
 
   type Query {
     books: [Book]
+    authors: [Author]
   }
   `,
- resolver: {
-   Book: {
-     author(book) {
-       return authors[book.authour]
-     }
-   }
- }
+  resolvers: (model) => {
+    return {
+       Book: {
+          author(book) {
+            console.log('foobar', book.author['_id'], book.author) 
+            return model.authors.findOne({'_id': book.author['_id']})
+          }
+        },
+        Query: {
+          books: () => model.books.find(),
+          authors: () => model.authors.find(),
+        }
+    }
+  }
 } 
