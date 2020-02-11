@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/robindanzinger/crud-playground#readme",
   "devDependencies": {
+    "apollo-server-testing": "^2.10.0",
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
     "mocha": "^7.0.0"

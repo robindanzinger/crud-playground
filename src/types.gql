@@ -15,21 +15,21 @@ module.exports = {
     authors: [Author]
   }
   `,
-  resolvers: (model) => {
+  resolvers: ({Author, Book}) => {
     return {
        Book: {
           author(book) {
-            return model.authors.findById(book.author._id)
+            return Author.findById(book.author._id)
           }
         },
         Author: {
           books(author) {
-            return model.books.find({author: author._id})
+            return Book.find({author: author._id})
           }
         },
         Query: {
-          books: () => model.books.find(),
-          authors: () => model.authors.find(),
+          books: () => Book.find(),
+          authors: () => Author.find(),
         }
     }
   }

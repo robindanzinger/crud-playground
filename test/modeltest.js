@@ -66,7 +66,7 @@ describe('simple crud operations', function () {
 
     const mvs = await model.getMovieDeep({})
     for (const mv of mvs) {
-      console.dir(mv, {depth: null})
+      //console.dir(mv, {depth: null})
     }
   })
 })
