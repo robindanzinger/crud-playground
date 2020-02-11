@@ -1,6 +1,6 @@
 const { ApolloServer, gql } = require('apollo-server-express')
-const typeDefs = require('./types.gql')
 const mongoose = require('mongoose')
+const typeDefs = require('./types.gql')
 const models = require('./model')
 
 const url = 'mongodb://127.0.0.1:27017/testdb'

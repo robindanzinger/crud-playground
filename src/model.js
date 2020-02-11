@@ -9,8 +9,6 @@ const bookSchema = new Schema({
   author: { type: Schema.Types.ObjectId, ref: 'author' }
 })
 
-
-
 module.exports = {
   Author: models['author'] ? model('author') : model('author', authorSchema),
   Book: models['book'] ? model('book') : model('book', bookSchema),

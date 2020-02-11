@@ -29,9 +29,11 @@ async function createSampleData() {
     author: cid._id,
   })
 
-  hp1.save()
-  hp2.save()
-  jp.save()
+  await Promise.all([
+    hp1.save(),
+    hp2.save(),
+    jp.save(),
+  ])
 }
 
 module.exports = createSampleData
