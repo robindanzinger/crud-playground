@@ -18,18 +18,24 @@ describe('simple crud operations', function () {
     console.log('create sample data')
     await createSampleData() 
   })
-  it('can query authors', async function () {
+  it('can query books and authors', async function () {
     const result = await query({
       query: gql`
         query {
           books { 
+            _id
             title 
+            author {
+              name
+            }
           }
         }
       `
     });
-    
+   
     expect(matchers.array.containing('The Philosopher\'s Stone', 'Harry Potter and the Chamber of Secrets', 'Jurassic Park').matches(result.data.books.map(e => e.title))).to.be.true
+    expect(matchers.string.not.empty.matches(result.data.books[0]._id)).to.be.true
+    expect(matchers.array.containing('J.K. Rowling', 'Michael Crichton').matches(result.data.books.map(e => e.author.name))).to.be.true
   })
 })
 
