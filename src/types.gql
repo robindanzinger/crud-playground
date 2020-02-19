@@ -9,12 +9,18 @@ module.exports = {
   type Author {
     _id: String
     name: String
+    address: Address
     books: [Book]
   }
 
   type Query {
     books: [Book]
     authors: [Author]
+  }
+
+  type Address {
+    street: String
+    city: String
   }
   `,
   resolvers: ({Author, Book}) => {

@@ -27,12 +27,17 @@ describe('simple crud operations', function () {
             title 
             author {
               name
+              address {
+                street
+                city
+              }
             }
           }
         }
       `
     });
    
+    console.dir(result, {depth:null})
     expect(matchers.array.containing('The Philosopher\'s Stone', 'Harry Potter and the Chamber of Secrets', 'Jurassic Park').matches(result.data.books.map(e => e.title))).to.be.true
     expect(matchers.string.not.empty.matches(result.data.books[0]._id)).to.be.true
     expect(matchers.array.containing('J.K. Rowling', 'Michael Crichton').matches(result.data.books.map(e => e.author.name))).to.be.true

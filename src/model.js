@@ -1,7 +1,12 @@
 const { Schema, model, models }= require('mongoose')
 
+const addressSchema = new Schema({
+  street: String,
+  city: String,
+})
 const authorSchema = new Schema({
   name: String,
+  address: addressSchema,
   books: [{ type: Schema.Types.ObjectId, ref: 'book' }]
 })
 const bookSchema = new Schema({

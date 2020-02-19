@@ -5,7 +5,11 @@ async function createSampleData() {
 
   // authors
   const rowling = new Author({
-    name: 'J.K. Rowling'
+    name: 'J.K. Rowling',
+    address: {
+      city: "foo",
+      street: "bar"
+    }
   })
   const rid = await rowling.save()
   const crichton = new Author({
